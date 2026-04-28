@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - migrate
+      - redis
+      - db
+    env_file:
+      - .env
+
+  worker:
+    build: .
+    command: celery -A workers.celery_app.celery worker --loglevel=info
+    depends_on:
+      - migrate
+      - redis
+      - db
+    env_file:
+      - .env
+
+  redis:
+    image: redis:7
+
+  db:
+    image: postgres:15
+    ports:
+    - "5435:5432"
+    env_file:
+      - .env
+
+  migrate:
+    build: .
+    command: alembic upgrade head
+    depends_on:
+      - db
+    env_file:
+      - .env
